@@ -1,0 +1,6 @@
+langgraph==0.0.20
+langchain==0.1.0
+langchain-community==0.0.10
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.23
+python-dotenv==1.0.0
