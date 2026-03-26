@@ -24,6 +24,14 @@ class Worker:
             Generate ONLY the SQL query, nothing else. Do NOT include markdown formatting, backticks, or the word 'sql'.
             Just output the raw SQL query.
             Make sure to use the correct schema prefix (it_department or finance_department).
+             
+            Examples: 
+            User:Show me all the employees in the it department
+            Answer: SELECT * FROM it_department.employees
+            
+            User:Show me all the employees in the finance department
+            Answer: SELECT * FROM finance_department.employees
+
             """),
             ("human", "{query}")
         ])
