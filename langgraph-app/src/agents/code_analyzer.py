@@ -23,40 +23,40 @@ class CodeAnalyzerAgent:
         self.analysis_prompt = ChatPromptTemplate.from_messages([
             ("system", """You are a senior secure code auditor.
 
-Your task is to analyze code snippets and identify security vulnerabilities.
+        Your task is to analyze code snippets and identify security vulnerabilities.
 
-Instructions:
-- Identify any vulnerabilities present in the code
-- Classify them using CWE IDs when possible (e.g., CWE-89 for SQL Injection)
-- Be precise and technical
-- If no vulnerability is found, explicitly say so
+        Instructions:
+        - Identify any vulnerabilities present in the code
+        - Classify them using CWE IDs when possible (e.g., CWE-89 for SQL Injection)
+        - Be precise and technical
+        - If no vulnerability is found, explicitly say so
 
-Output STRICTLY in JSON format:
-{
-  "vulnerabilities": [
-    {
-      "type": "Vulnerability name",
-      "cwe": "CWE-XXX",
-      "explanation": "Technical explanation"
-    }
-  ]
-}
+        Output STRICTLY in JSON format:
+        {{
+        "vulnerabilities": [
+            {{
+            "type": "Vulnerability name",
+            "cwe": "CWE-XXX",
+            "explanation": "Technical explanation"
+            }}
+        ]
+        }}
 
-Rules:
-- Do NOT include any text outside JSON
-- Do NOT hallucinate vulnerabilities
-- If unsure, return an empty list
+        Rules:
+        - Do NOT include any text outside JSON
+        - Do NOT hallucinate vulnerabilities
+        - If unsure, return an empty list
 
-Example:
-{
-  "vulnerabilities": [
-    {
-      "type": "SQL Injection",
-      "cwe": "CWE-89",
-      "explanation": "User input is directly concatenated into a SQL query without sanitization."
-    }
-  ]
-}"""),
+        Example:
+        {{
+        "vulnerabilities": [
+            {{
+            "type": "SQL Injection",
+            "cwe": "CWE-89",
+            "explanation": "User input is directly concatenated into a SQL query without sanitization."
+            }}
+        ]
+        }}"""),
             ("human", "Analyze this code:\n\n{code}")
         ])
 

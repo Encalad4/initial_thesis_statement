@@ -1,19 +1,6 @@
 # langgraph-app/src/models/state.py
 
-from typing import List, Optional, TypedDict, Literal, Dict, Any
-
-
-class Message(TypedDict):
-    role: Literal["user", "assistant", "system", "tool"]
-    content: str
-    tool_name: Optional[str]
-    tool_result: Optional[str]
-
-
-class Plan(TypedDict):
-    intent: Literal["query_db", "chat"]
-    tool: Optional[str]
-    status: Literal["pending", "executing", "done"]
+from typing import TypedDict, List, Optional, Dict, Any, Literal
 
 
 class TraceStep(TypedDict):
@@ -21,22 +8,60 @@ class TraceStep(TypedDict):
     detail: str
 
 
-class AgentState(TypedDict):
-    # Conversation history
-    messages: List[Message]
+class RepoSummary(TypedDict, total=False):
+    repo_path: str
+    top_level_items: List[str]
+    total_files: int
+    extensions: Dict[str, int]
+    sample_files: List[str]
 
-    # Current active agent
+
+class CandidateFile(TypedDict, total=False):
+    file_path: str
+    reason: str
+    priority: int
+
+
+class Finding(TypedDict, total=False):
+    title: str
+    vulnerability_type: str
+    cwe_id: Optional[str]
+    file_path: str
+    line_start: Optional[int]
+    line_end: Optional[int]
+    evidence: str
+    description: str
+    confidence: float
+    semantic_query: str
+    mitigation: str
+    related_cves: List[Dict[str, Any]]
+    status: Literal["suspected", "validated", "rejected"]
+
+
+class AnalysisPlan(TypedDict, total=False):
+    status: Literal["pending", "running", "completed", "failed"]
+    current_stage: str
+
+
+class AgentState(TypedDict, total=False):
+    github_url: str
+    repo_id: Optional[str]
+    repo_path: Optional[str]
+
+    plan: AnalysisPlan
     current_agent: str
 
-    # Structured execution plan
-    plan: Optional[Plan]
+    repo_summary: Optional[RepoSummary]
+    project_stack: Dict[str, Any]
+    candidate_files: List[CandidateFile]
 
-    # Tool execution
-    tool_query: Optional[str]
-    tool_result: Optional[Dict[str, Any]]
+    raw_findings: List[Finding]
+    validated_findings: List[Finding]
 
-    # Final output
-    final_response: Optional[str]
+    final_report: Optional[Dict[str, Any]]
+    errors: List[str]
+    trace: List[TraceStep]
 
-    # Execution trace (observability)
-    trace: Optional[List[TraceStep]]
+    debug_max_hypotheses: Optional[int]
+    assessment_results: List[Finding]
+    consolidated_findings: List[Finding]

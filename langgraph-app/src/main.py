@@ -1,6 +1,26 @@
 # langgraph-app/src/main.py
 
 from src.graph.workflow import MultiAgentWorkflow
+import time
+
+
+def main():
+    workflow = MultiAgentWorkflow()
+
+    print("LangGraph app initialized.")
+    print("Container service mode active.")
+    print("Waiting for future integration with repository analysis workflow...")
+
+    while True:
+        time.sleep(60)
+
+
+if __name__ == "__main__":
+    main()
+
+
+'''
+from src.graph.workflow import MultiAgentWorkflow
 
 
 def main():
@@ -30,4 +50,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main() '''

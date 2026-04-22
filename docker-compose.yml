@@ -3,9 +3,9 @@ networks:
     driver: bridge
 
 services:
-  cve-db-tesis-1:
+  cve-db-tesis-3:
     image: ankane/pgvector:latest
-    container_name: cve-db-tesis-1
+    container_name: cve-db-tesis-3
     environment:
       POSTGRES_DB: cve_database
       POSTGRES_USER: cve_user
@@ -19,25 +19,22 @@ services:
       - tesis-network
     restart: unless-stopped
 
-  mock-db-tesis-1:
-    image: postgres:15
-    container_name: mock-db-tesis-1
-    environment:
-      POSTGRES_DB: mock_database
-      POSTGRES_USER: mock_user
-      POSTGRES_PASSWORD: mock_password
+  sandbox-tesis-3:
+    build:
+      context: ./sandbox
+      dockerfile: Dockerfile
+    container_name: sandbox-tesis-3
     ports:
-      - "5434:5432"
+      - "8001:8001"
     volumes:
-      - ./databases/mock-db/data:/var/lib/postgresql/data
-      - ./databases/mock-db/init:/docker-entrypoint-initdb.d
+      - ./shared/repos:/repos
     networks:
       - tesis-network
     restart: unless-stopped
 
-  pgadmin-tesis-1:
+  pgadmin-tesis-3:
     image: dpage/pgadmin4:latest
-    container_name: pgadmin-tesis-1
+    container_name: pgadmin-tesis-3
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
@@ -50,36 +47,38 @@ services:
       - tesis-network
     restart: unless-stopped
     depends_on:
-      - cve-db-tesis-1
-      - mock-db-tesis-1
+      - cve-db-tesis-3
+  
 
-  langgraph-app-tesis-1:  # <-- This line is now indented under services:
+  langgraph-app-tesis-3:  # <-- This line is now indented under services:
     build:
       context: ./langgraph-app
       dockerfile: Dockerfile
-    container_name: langgraph-app-tesis-1
+    container_name: langgraph-app-tesis-3
     ports:
       - "8000:8000"
     volumes:
       - ./langgraph-app/src:/app/src
       - ./langgraph-app/requirements.txt:/app/requirements.txt
-      - ./ollama-data:/root/.ollama   
+      - ./ollama-data:/root/.ollama
+      - ./shared/repos:/repos:ro   
     environment:
-      CVE_DB_HOST: cve-db-tesis-1
+      CVE_DB_HOST: cve-db-tesis-3
       CVE_DB_PORT: 5432
       CVE_DB_NAME: cve_database
       CVE_DB_USER: cve_user
       CVE_DB_PASSWORD: cve_password
-      MOCK_DB_HOST: mock-db-tesis-1
+      MOCK_DB_HOST: mock-db-tesis-3
       MOCK_DB_PORT: 5432
       MOCK_DB_NAME: mock_database
       MOCK_DB_USER: mock_user
       MOCK_DB_PASSWORD: mock_password
       OLLAMA_HOST: localhost
       OLLAMA_PORT: 11434
+      SANDBOX_API_URL: http://sandbox-tesis-3:8001
     networks:
       - tesis-network
     depends_on:
-      - cve-db-tesis-1
-      - mock-db-tesis-1
+      - cve-db-tesis-3
+
     restart: unless-stopped  
