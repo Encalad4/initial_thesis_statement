@@ -14,7 +14,7 @@ class SandboxCloneTool:
             response = requests.post(
                 f"{self.base_url}/clone",
                 json={"github_url": github_url},
-                timeout=60
+                timeout=300
             )
 
             if response.status_code != 200:

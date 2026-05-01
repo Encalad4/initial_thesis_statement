@@ -1,4 +1,4 @@
-# langgraph-app/src/tools/suspicious_pattern_tool.py
+#langgraph-app/src/tools/suspicious_pattern_tool.py
 
 from pathlib import Path
 from typing import Dict, Any, List
@@ -30,18 +30,56 @@ class SuspiciousPatternTool:
             },
             {
                 "name": "sql_query_concatenation",
-                "regex": r"(SELECT|INSERT|UPDATE|DELETE).*(\+|f\"|f'|format\()",
-                "severity_hint": "high"
+                "regex": (
+                    r"("
+                    r"\b(SELECT|INSERT|UPDATE|DELETE)\b[^\n;]*(\+|\.concat\s*\(|StringBuilder|append\s*\()|"
+                    r"\b(execute|executeQuery|executeUpdate|executeLargeUpdate)\s*\([^)]*\+|"
+                    r"\bprepareStatement\s*\([^)]*\+|"
+                    r"\bcreateStatement\s*\(\s*\)\s*\.\s*execute(Query|Update|LargeUpdate)?\s*\([^)]*\+"
+                    r")"
+                ),
+                "severity_hint": "high",
+                "ignore_regexes": [
+                    r"\bPreparedStatement\b",
+                ]
             },
             {
                 "name": "command_execution",
-                "regex": r"\b(os\.system|subprocess\.(run|Popen|call)|exec\()",
+                "regex": (
+                    r"\b("
+                    r"os\.system|"
+                    r"subprocess\.(run|Popen|call)|"
+                    r"exec\s*\(|"
+                    r"Runtime\.getRuntime\s*\(\)\.exec\s*\(|"
+                    r"new\s+ProcessBuilder\s*\(|"
+                    r"ProcessBuilder\s*\("
+                    r")"
+                ),
                 "severity_hint": "high"
             },
             {
                 "name": "path_traversal_signal",
-                "regex": r"\b(open|send_file|readFile|fs\.readFile)\b.*(\.\./|filename|path)",
-                "severity_hint": "medium"
+                "regex": (
+                    r"\b("
+                    r"new\s+(?:[\w]+\.)*File\s*\(|"
+                    r"new\s+(?:[\w]+\.)*FileInputStream\s*\(|"
+                    r"new\s+(?:[\w]+\.)*FileOutputStream\s*\(|"
+                    r"new\s+(?:[\w]+\.)*FileReader\s*\(|"
+                    r"new\s+(?:[\w]+\.)*FileWriter\s*\(|"
+                    r"new\s+(?:[\w]+\.)*RandomAccessFile\s*\(|"
+                    r"(?:[\w]+\.)*Paths\.get\s*\(|"
+                    r"(?:[\w]+\.)*Files\.(readAllBytes|readString|readAllLines|lines|newInputStream|newBufferedReader|newOutputStream)\s*\(|"
+                    r"getCanonicalPath\s*\(|"
+                    r"getAbsolutePath\s*\("
+                    r")"
+                ),
+                "severity_hint": "medium",
+                "ignore_regexes": [
+                    r"\bSystem\.out\.print(ln)?\s*\(",
+                    r"\bSystem\.err\.print(ln)?\s*\(",
+                    r"\blogger\.(debug|info|warn|error|trace)\s*\(",
+                    r"\bLOG\.(debug|info|warn|error|trace)\s*\(",
+                ]
             },
             {
                 "name": "unsafe_deserialization",
@@ -49,6 +87,37 @@ class SuspiciousPatternTool:
                 "severity_hint": "high"
             }
         ]
+
+    def _line_should_be_ignored(self, line: str, pattern: Dict[str, Any]) -> bool:
+        for ignore_regex in pattern.get("ignore_regexes", []):
+            if re.search(ignore_regex, line, flags=re.IGNORECASE):
+                return True
+        return False
+
+    def _is_commented_line(self, line: str) -> bool:
+        stripped = line.strip()
+        return (
+            stripped.startswith("//")
+            or stripped.startswith("/*")
+            or stripped.startswith("*")
+            or stripped.startswith("*/")
+        )
+
+    def _is_structural_noise(self, line: str) -> bool:
+        stripped = line.strip()
+        return (
+            stripped == ""
+            or stripped.startswith("import ")
+            or stripped.startswith("package ")
+            or stripped in {"{", "}", "(", ")", ");"}
+        )
+
+    def _is_incomplete_path_fragment(self, line: str) -> bool:
+        stripped = line.strip()
+        return (
+            stripped.endswith("(")
+            or stripped in {"new java.io.File(", "new File("}
+        )
 
     def scan_files(self, repo_path: str, candidate_files: List[Dict[str, Any]], max_matches: int = 200) -> Dict[str, Any]:
         root = Path(repo_path)
@@ -77,7 +146,19 @@ class SuspiciousPatternTool:
                     continue
 
                 for line_number, line in enumerate(text.splitlines(), start=1):
+                    if self._is_commented_line(line):
+                        continue
+
+                    if self._is_structural_noise(line):
+                        continue
+
                     for pattern in self.patterns:
+                        if self._line_should_be_ignored(line, pattern):
+                            continue
+
+                        if pattern["name"] == "path_traversal_signal" and self._is_incomplete_path_fragment(line):
+                            continue
+
                         if re.search(pattern["regex"], line, flags=re.IGNORECASE):
                             matches.append({
                                 "file_path": relative_path,

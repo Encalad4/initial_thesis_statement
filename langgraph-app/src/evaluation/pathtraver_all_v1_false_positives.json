@@ -1,0 +1,1115 @@
+{
+  "run_labels": [
+    "pathtraver_all_v1"
+  ],
+  "error_type": "fp",
+  "category": "pathtraver",
+  "benchmark_name": null,
+  "summary": {
+    "count": 10,
+    "false_positive_count": 10,
+    "false_negative_count": 0
+  },
+  "cases": [
+    {
+      "error_type": "false_positive",
+      "run_label": "pathtraver_all_v1",
+      "test_name": "BenchmarkTest00134",
+      "category": "pathtraver",
+      "real_vulnerability": false,
+      "expected_cwe_id": "CWE-22",
+      "predicted_cwes": [
+        "CWE-22"
+      ],
+      "source_file": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00134.java",
+      "duration_seconds": 235.43991239601746,
+      "has_prediction": true,
+      "raw_findings": [
+        {
+          "line": "// new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR + bar).createNewFile();",
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00134.java",
+          "line_number": 72,
+          "pattern_name": "path_traversal_signal",
+          "severity_hint": "medium"
+        },
+        {
+          "line": "new java.io.FileOutputStream(new java.io.FileInputStream(fileName).getFD()); ) {",
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00134.java",
+          "line_number": 75,
+          "pattern_name": "path_traversal_signal",
+          "severity_hint": "medium"
+        }
+      ],
+      "assessment_results": [
+        {
+          "decision": "validated",
+          "evidence": "// new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR + bar).createNewFile();",
+          "line_end": 72,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00134.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 72,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        },
+        {
+          "decision": "rejected",
+          "evidence": "new java.io.FileOutputStream(new java.io.FileInputStream(fileName).getFD()); ) {",
+          "line_end": 75,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00134.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 75,
+          "mitigation": null,
+          "final_cwe_id": null,
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "validated_findings": [
+        {
+          "decision": "validated",
+          "evidence": "// new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR + bar).createNewFile();",
+          "line_end": 72,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00134.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 72,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "consolidated_findings": [
+        {
+          "line_end": 72,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00134.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 72,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "merged_count": 1,
+          "evidence_items": [
+            {
+              "evidence": "// new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR + bar).createNewFile();",
+              "line_end": 72,
+              "line_start": 72
+            }
+          ],
+          "final_cwe_name": null,
+          "hypothesis_types": [
+            "path_traversal_signal"
+          ]
+        }
+      ],
+      "trace": [
+        {
+          "step": "intake",
+          "detail": "Initialized analysis for URL: https://github.com/OWASP-Benchmark/BenchmarkJava.git"
+        },
+        {
+          "step": "clone_repo",
+          "detail": "Repository cloned successfully. repo_id=c8385ac7e30b982f, repo_path=/repos/c8385ac7e30b982f"
+        },
+        {
+          "step": "repo_scout",
+          "detail": "Benchmark fast path used. candidate_files=1"
+        },
+        {
+          "step": "security_scan",
+          "detail": "Security scan completed. raw_matches=2"
+        },
+        {
+          "step": "cwe_validate",
+          "detail": "CWE validation completed. accepted_validated_findings=1"
+        },
+        {
+          "step": "consolidate_findings",
+          "detail": "Finding consolidation completed. consolidated_findings=1"
+        },
+        {
+          "step": "reporter",
+          "detail": "Generated placeholder final report."
+        }
+      ]
+    },
+    {
+      "error_type": "false_positive",
+      "run_label": "pathtraver_all_v1",
+      "test_name": "BenchmarkTest00220",
+      "category": "pathtraver",
+      "real_vulnerability": false,
+      "expected_cwe_id": "CWE-22",
+      "predicted_cwes": [
+        "CWE-22"
+      ],
+      "source_file": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00220.java",
+      "duration_seconds": 103.80113092900137,
+      "has_prediction": true,
+      "raw_findings": [
+        {
+          "line": "fos = new java.io.FileOutputStream(fileName, false);",
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00220.java",
+          "line_number": 90,
+          "pattern_name": "path_traversal_signal",
+          "severity_hint": "medium"
+        }
+      ],
+      "assessment_results": [
+        {
+          "decision": "validated",
+          "evidence": "fos = new java.io.FileOutputStream(fileName, false);",
+          "line_end": 90,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00220.java",
+          "rationale": null,
+          "confidence": 0.95,
+          "line_start": 90,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "validated_findings": [
+        {
+          "decision": "validated",
+          "evidence": "fos = new java.io.FileOutputStream(fileName, false);",
+          "line_end": 90,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00220.java",
+          "rationale": null,
+          "confidence": 0.95,
+          "line_start": 90,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "consolidated_findings": [
+        {
+          "line_end": 90,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00220.java",
+          "rationale": null,
+          "confidence": 0.95,
+          "line_start": 90,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "merged_count": 1,
+          "evidence_items": [
+            {
+              "evidence": "fos = new java.io.FileOutputStream(fileName, false);",
+              "line_end": 90,
+              "line_start": 90
+            }
+          ],
+          "final_cwe_name": null,
+          "hypothesis_types": [
+            "path_traversal_signal"
+          ]
+        }
+      ],
+      "trace": [
+        {
+          "step": "intake",
+          "detail": "Initialized analysis for URL: https://github.com/OWASP-Benchmark/BenchmarkJava.git"
+        },
+        {
+          "step": "clone_repo",
+          "detail": "Repository cloned successfully. repo_id=c8385ac7e30b982f, repo_path=/repos/c8385ac7e30b982f"
+        },
+        {
+          "step": "repo_scout",
+          "detail": "Benchmark fast path used. candidate_files=1"
+        },
+        {
+          "step": "security_scan",
+          "detail": "Security scan completed. raw_matches=1"
+        },
+        {
+          "step": "cwe_validate",
+          "detail": "CWE validation completed. accepted_validated_findings=1"
+        },
+        {
+          "step": "consolidate_findings",
+          "detail": "Finding consolidation completed. consolidated_findings=1"
+        },
+        {
+          "step": "reporter",
+          "detail": "Generated placeholder final report."
+        }
+      ]
+    },
+    {
+      "error_type": "false_positive",
+      "run_label": "pathtraver_all_v1",
+      "test_name": "BenchmarkTest00454",
+      "category": "pathtraver",
+      "real_vulnerability": false,
+      "expected_cwe_id": "CWE-22",
+      "predicted_cwes": [
+        "CWE-22"
+      ],
+      "source_file": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00454.java",
+      "duration_seconds": 108.88841359698563,
+      "has_prediction": true,
+      "raw_findings": [
+        {
+          "line": "fis = new java.io.FileInputStream(new java.io.File(fileName));",
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00454.java",
+          "line_number": 62,
+          "pattern_name": "path_traversal_signal",
+          "severity_hint": "medium"
+        }
+      ],
+      "assessment_results": [
+        {
+          "decision": "validated",
+          "evidence": "fis = new java.io.FileInputStream(new java.io.File(fileName));",
+          "line_end": 62,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00454.java",
+          "rationale": null,
+          "confidence": 0.95,
+          "line_start": 62,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "validated_findings": [
+        {
+          "decision": "validated",
+          "evidence": "fis = new java.io.FileInputStream(new java.io.File(fileName));",
+          "line_end": 62,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00454.java",
+          "rationale": null,
+          "confidence": 0.95,
+          "line_start": 62,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "consolidated_findings": [
+        {
+          "line_end": 62,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00454.java",
+          "rationale": null,
+          "confidence": 0.95,
+          "line_start": 62,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "merged_count": 1,
+          "evidence_items": [
+            {
+              "evidence": "fis = new java.io.FileInputStream(new java.io.File(fileName));",
+              "line_end": 62,
+              "line_start": 62
+            }
+          ],
+          "final_cwe_name": null,
+          "hypothesis_types": [
+            "path_traversal_signal"
+          ]
+        }
+      ],
+      "trace": [
+        {
+          "step": "intake",
+          "detail": "Initialized analysis for URL: https://github.com/OWASP-Benchmark/BenchmarkJava.git"
+        },
+        {
+          "step": "clone_repo",
+          "detail": "Repository cloned successfully. repo_id=c8385ac7e30b982f, repo_path=/repos/c8385ac7e30b982f"
+        },
+        {
+          "step": "repo_scout",
+          "detail": "Benchmark fast path used. candidate_files=1"
+        },
+        {
+          "step": "security_scan",
+          "detail": "Security scan completed. raw_matches=1"
+        },
+        {
+          "step": "cwe_validate",
+          "detail": "CWE validation completed. accepted_validated_findings=1"
+        },
+        {
+          "step": "consolidate_findings",
+          "detail": "Finding consolidation completed. consolidated_findings=1"
+        },
+        {
+          "step": "reporter",
+          "detail": "Generated placeholder final report."
+        }
+      ]
+    },
+    {
+      "error_type": "false_positive",
+      "run_label": "pathtraver_all_v1",
+      "test_name": "BenchmarkTest00620",
+      "category": "pathtraver",
+      "real_vulnerability": false,
+      "expected_cwe_id": "CWE-22",
+      "predicted_cwes": [
+        "CWE-22"
+      ],
+      "source_file": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00620.java",
+      "duration_seconds": 226.14936371301883,
+      "has_prediction": true,
+      "raw_findings": [
+        {
+          "line": "new java.io.File(",
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00620.java",
+          "line_number": 61,
+          "pattern_name": "path_traversal_signal",
+          "severity_hint": "medium"
+        },
+        {
+          "line": "new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR), bar);",
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00620.java",
+          "line_number": 62,
+          "pattern_name": "path_traversal_signal",
+          "severity_hint": "medium"
+        }
+      ],
+      "assessment_results": [
+        {
+          "decision": "rejected",
+          "evidence": "new java.io.File(",
+          "line_end": 61,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00620.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 61,
+          "mitigation": null,
+          "final_cwe_id": null,
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        },
+        {
+          "decision": "validated",
+          "evidence": "new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR), bar);",
+          "line_end": 62,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00620.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 62,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "validated_findings": [
+        {
+          "decision": "validated",
+          "evidence": "new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR), bar);",
+          "line_end": 62,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00620.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 62,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "consolidated_findings": [
+        {
+          "line_end": 62,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00620.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 62,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "merged_count": 1,
+          "evidence_items": [
+            {
+              "evidence": "new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR), bar);",
+              "line_end": 62,
+              "line_start": 62
+            }
+          ],
+          "final_cwe_name": null,
+          "hypothesis_types": [
+            "path_traversal_signal"
+          ]
+        }
+      ],
+      "trace": [
+        {
+          "step": "intake",
+          "detail": "Initialized analysis for URL: https://github.com/OWASP-Benchmark/BenchmarkJava.git"
+        },
+        {
+          "step": "clone_repo",
+          "detail": "Repository cloned successfully. repo_id=c8385ac7e30b982f, repo_path=/repos/c8385ac7e30b982f"
+        },
+        {
+          "step": "repo_scout",
+          "detail": "Benchmark fast path used. candidate_files=1"
+        },
+        {
+          "step": "security_scan",
+          "detail": "Security scan completed. raw_matches=2"
+        },
+        {
+          "step": "cwe_validate",
+          "detail": "CWE validation completed. accepted_validated_findings=1"
+        },
+        {
+          "step": "consolidate_findings",
+          "detail": "Finding consolidation completed. consolidated_findings=1"
+        },
+        {
+          "step": "reporter",
+          "detail": "Generated placeholder final report."
+        }
+      ]
+    },
+    {
+      "error_type": "false_positive",
+      "run_label": "pathtraver_all_v1",
+      "test_name": "BenchmarkTest00622",
+      "category": "pathtraver",
+      "real_vulnerability": false,
+      "expected_cwe_id": "CWE-22",
+      "predicted_cwes": [
+        "CWE-22"
+      ],
+      "source_file": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00622.java",
+      "duration_seconds": 105.87553001800552,
+      "has_prediction": true,
+      "raw_findings": [
+        {
+          "line": "new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR, bar);",
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00622.java",
+          "line_number": 70,
+          "pattern_name": "path_traversal_signal",
+          "severity_hint": "medium"
+        }
+      ],
+      "assessment_results": [
+        {
+          "decision": "validated",
+          "evidence": "new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR, bar);",
+          "line_end": 70,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00622.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 70,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "validated_findings": [
+        {
+          "decision": "validated",
+          "evidence": "new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR, bar);",
+          "line_end": 70,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00622.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 70,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "consolidated_findings": [
+        {
+          "line_end": 70,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00622.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 70,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "merged_count": 1,
+          "evidence_items": [
+            {
+              "evidence": "new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR, bar);",
+              "line_end": 70,
+              "line_start": 70
+            }
+          ],
+          "final_cwe_name": null,
+          "hypothesis_types": [
+            "path_traversal_signal"
+          ]
+        }
+      ],
+      "trace": [
+        {
+          "step": "intake",
+          "detail": "Initialized analysis for URL: https://github.com/OWASP-Benchmark/BenchmarkJava.git"
+        },
+        {
+          "step": "clone_repo",
+          "detail": "Repository cloned successfully. repo_id=c8385ac7e30b982f, repo_path=/repos/c8385ac7e30b982f"
+        },
+        {
+          "step": "repo_scout",
+          "detail": "Benchmark fast path used. candidate_files=1"
+        },
+        {
+          "step": "security_scan",
+          "detail": "Security scan completed. raw_matches=1"
+        },
+        {
+          "step": "cwe_validate",
+          "detail": "CWE validation completed. accepted_validated_findings=1"
+        },
+        {
+          "step": "consolidate_findings",
+          "detail": "Finding consolidation completed. consolidated_findings=1"
+        },
+        {
+          "step": "reporter",
+          "detail": "Generated placeholder final report."
+        }
+      ]
+    },
+    {
+      "error_type": "false_positive",
+      "run_label": "pathtraver_all_v1",
+      "test_name": "BenchmarkTest00784",
+      "category": "pathtraver",
+      "real_vulnerability": false,
+      "expected_cwe_id": "CWE-22",
+      "predicted_cwes": [
+        "CWE-22"
+      ],
+      "source_file": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00784.java",
+      "duration_seconds": 113.76783800401608,
+      "has_prediction": true,
+      "raw_findings": [
+        {
+          "line": "fis = new java.io.FileInputStream(fileName);",
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00784.java",
+          "line_number": 96,
+          "pattern_name": "path_traversal_signal",
+          "severity_hint": "medium"
+        }
+      ],
+      "assessment_results": [
+        {
+          "decision": "validated",
+          "evidence": "fis = new java.io.FileInputStream(fileName);",
+          "line_end": 96,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00784.java",
+          "rationale": null,
+          "confidence": 0.95,
+          "line_start": 96,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "validated_findings": [
+        {
+          "decision": "validated",
+          "evidence": "fis = new java.io.FileInputStream(fileName);",
+          "line_end": 96,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00784.java",
+          "rationale": null,
+          "confidence": 0.95,
+          "line_start": 96,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "consolidated_findings": [
+        {
+          "line_end": 96,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00784.java",
+          "rationale": null,
+          "confidence": 0.95,
+          "line_start": 96,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "merged_count": 1,
+          "evidence_items": [
+            {
+              "evidence": "fis = new java.io.FileInputStream(fileName);",
+              "line_end": 96,
+              "line_start": 96
+            }
+          ],
+          "final_cwe_name": null,
+          "hypothesis_types": [
+            "path_traversal_signal"
+          ]
+        }
+      ],
+      "trace": [
+        {
+          "step": "intake",
+          "detail": "Initialized analysis for URL: https://github.com/OWASP-Benchmark/BenchmarkJava.git"
+        },
+        {
+          "step": "clone_repo",
+          "detail": "Repository cloned successfully. repo_id=c8385ac7e30b982f, repo_path=/repos/c8385ac7e30b982f"
+        },
+        {
+          "step": "repo_scout",
+          "detail": "Benchmark fast path used. candidate_files=1"
+        },
+        {
+          "step": "security_scan",
+          "detail": "Security scan completed. raw_matches=1"
+        },
+        {
+          "step": "cwe_validate",
+          "detail": "CWE validation completed. accepted_validated_findings=1"
+        },
+        {
+          "step": "consolidate_findings",
+          "detail": "Finding consolidation completed. consolidated_findings=1"
+        },
+        {
+          "step": "reporter",
+          "detail": "Generated placeholder final report."
+        }
+      ]
+    },
+    {
+      "error_type": "false_positive",
+      "run_label": "pathtraver_all_v1",
+      "test_name": "BenchmarkTest00786",
+      "category": "pathtraver",
+      "real_vulnerability": false,
+      "expected_cwe_id": "CWE-22",
+      "predicted_cwes": [
+        "CWE-22"
+      ],
+      "source_file": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00786.java",
+      "duration_seconds": 119.60040814999957,
+      "has_prediction": true,
+      "raw_findings": [
+        {
+          "line": "fos = new java.io.FileOutputStream(fileName, false);",
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00786.java",
+          "line_number": 84,
+          "pattern_name": "path_traversal_signal",
+          "severity_hint": "medium"
+        }
+      ],
+      "assessment_results": [
+        {
+          "decision": "validated",
+          "evidence": "fos = new java.io.FileOutputStream(fileName, false);",
+          "line_end": 84,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00786.java",
+          "rationale": null,
+          "confidence": 0.95,
+          "line_start": 84,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "validated_findings": [
+        {
+          "decision": "validated",
+          "evidence": "fos = new java.io.FileOutputStream(fileName, false);",
+          "line_end": 84,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00786.java",
+          "rationale": null,
+          "confidence": 0.95,
+          "line_start": 84,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "consolidated_findings": [
+        {
+          "line_end": 84,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00786.java",
+          "rationale": null,
+          "confidence": 0.95,
+          "line_start": 84,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "merged_count": 1,
+          "evidence_items": [
+            {
+              "evidence": "fos = new java.io.FileOutputStream(fileName, false);",
+              "line_end": 84,
+              "line_start": 84
+            }
+          ],
+          "final_cwe_name": null,
+          "hypothesis_types": [
+            "path_traversal_signal"
+          ]
+        }
+      ],
+      "trace": [
+        {
+          "step": "intake",
+          "detail": "Initialized analysis for URL: https://github.com/OWASP-Benchmark/BenchmarkJava.git"
+        },
+        {
+          "step": "clone_repo",
+          "detail": "Repository cloned successfully. repo_id=c8385ac7e30b982f, repo_path=/repos/c8385ac7e30b982f"
+        },
+        {
+          "step": "repo_scout",
+          "detail": "Benchmark fast path used. candidate_files=1"
+        },
+        {
+          "step": "security_scan",
+          "detail": "Security scan completed. raw_matches=1"
+        },
+        {
+          "step": "cwe_validate",
+          "detail": "CWE validation completed. accepted_validated_findings=1"
+        },
+        {
+          "step": "consolidate_findings",
+          "detail": "Finding consolidation completed. consolidated_findings=1"
+        },
+        {
+          "step": "reporter",
+          "detail": "Generated placeholder final report."
+        }
+      ]
+    },
+    {
+      "error_type": "false_positive",
+      "run_label": "pathtraver_all_v1",
+      "test_name": "BenchmarkTest00862",
+      "category": "pathtraver",
+      "real_vulnerability": false,
+      "expected_cwe_id": "CWE-22",
+      "predicted_cwes": [
+        "CWE-22"
+      ],
+      "source_file": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00862.java",
+      "duration_seconds": 110.39277716400102,
+      "has_prediction": true,
+      "raw_findings": [
+        {
+          "line": "new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR, bar);",
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00862.java",
+          "line_number": 55,
+          "pattern_name": "path_traversal_signal",
+          "severity_hint": "medium"
+        }
+      ],
+      "assessment_results": [
+        {
+          "decision": "validated",
+          "evidence": "new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR, bar);",
+          "line_end": 55,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00862.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 55,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "validated_findings": [
+        {
+          "decision": "validated",
+          "evidence": "new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR, bar);",
+          "line_end": 55,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00862.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 55,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "consolidated_findings": [
+        {
+          "line_end": 55,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00862.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 55,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "merged_count": 1,
+          "evidence_items": [
+            {
+              "evidence": "new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR, bar);",
+              "line_end": 55,
+              "line_start": 55
+            }
+          ],
+          "final_cwe_name": null,
+          "hypothesis_types": [
+            "path_traversal_signal"
+          ]
+        }
+      ],
+      "trace": [
+        {
+          "step": "intake",
+          "detail": "Initialized analysis for URL: https://github.com/OWASP-Benchmark/BenchmarkJava.git"
+        },
+        {
+          "step": "clone_repo",
+          "detail": "Repository cloned successfully. repo_id=c8385ac7e30b982f, repo_path=/repos/c8385ac7e30b982f"
+        },
+        {
+          "step": "repo_scout",
+          "detail": "Benchmark fast path used. candidate_files=1"
+        },
+        {
+          "step": "security_scan",
+          "detail": "Security scan completed. raw_matches=1"
+        },
+        {
+          "step": "cwe_validate",
+          "detail": "CWE validation completed. accepted_validated_findings=1"
+        },
+        {
+          "step": "consolidate_findings",
+          "detail": "Finding consolidation completed. consolidated_findings=1"
+        },
+        {
+          "step": "reporter",
+          "detail": "Generated placeholder final report."
+        }
+      ]
+    },
+    {
+      "error_type": "false_positive",
+      "run_label": "pathtraver_all_v1",
+      "test_name": "BenchmarkTest00866",
+      "category": "pathtraver",
+      "real_vulnerability": false,
+      "expected_cwe_id": "CWE-22",
+      "predicted_cwes": [
+        "CWE-22"
+      ],
+      "source_file": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00866.java",
+      "duration_seconds": 115.8526999259775,
+      "has_prediction": true,
+      "raw_findings": [
+        {
+          "line": "fos = new java.io.FileOutputStream(new java.io.File(fileName));",
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00866.java",
+          "line_number": 57,
+          "pattern_name": "path_traversal_signal",
+          "severity_hint": "medium"
+        }
+      ],
+      "assessment_results": [
+        {
+          "decision": "validated",
+          "evidence": "fos = new java.io.FileOutputStream(new java.io.File(fileName));",
+          "line_end": 57,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00866.java",
+          "rationale": null,
+          "confidence": 0.95,
+          "line_start": 57,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "validated_findings": [
+        {
+          "decision": "validated",
+          "evidence": "fos = new java.io.FileOutputStream(new java.io.File(fileName));",
+          "line_end": 57,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00866.java",
+          "rationale": null,
+          "confidence": 0.95,
+          "line_start": 57,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "consolidated_findings": [
+        {
+          "line_end": 57,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00866.java",
+          "rationale": null,
+          "confidence": 0.95,
+          "line_start": 57,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "merged_count": 1,
+          "evidence_items": [
+            {
+              "evidence": "fos = new java.io.FileOutputStream(new java.io.File(fileName));",
+              "line_end": 57,
+              "line_start": 57
+            }
+          ],
+          "final_cwe_name": null,
+          "hypothesis_types": [
+            "path_traversal_signal"
+          ]
+        }
+      ],
+      "trace": [
+        {
+          "step": "intake",
+          "detail": "Initialized analysis for URL: https://github.com/OWASP-Benchmark/BenchmarkJava.git"
+        },
+        {
+          "step": "clone_repo",
+          "detail": "Repository cloned successfully. repo_id=c8385ac7e30b982f, repo_path=/repos/c8385ac7e30b982f"
+        },
+        {
+          "step": "repo_scout",
+          "detail": "Benchmark fast path used. candidate_files=1"
+        },
+        {
+          "step": "security_scan",
+          "detail": "Security scan completed. raw_matches=1"
+        },
+        {
+          "step": "cwe_validate",
+          "detail": "CWE validation completed. accepted_validated_findings=1"
+        },
+        {
+          "step": "consolidate_findings",
+          "detail": "Finding consolidation completed. consolidated_findings=1"
+        },
+        {
+          "step": "reporter",
+          "detail": "Generated placeholder final report."
+        }
+      ]
+    },
+    {
+      "error_type": "false_positive",
+      "run_label": "pathtraver_all_v1",
+      "test_name": "BenchmarkTest00951",
+      "category": "pathtraver",
+      "real_vulnerability": false,
+      "expected_cwe_id": "CWE-22",
+      "predicted_cwes": [
+        "CWE-22"
+      ],
+      "source_file": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00951.java",
+      "duration_seconds": 109.78966236798442,
+      "has_prediction": true,
+      "raw_findings": [
+        {
+          "line": "java.io.File fileTarget = new java.io.File(fileURI);",
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00951.java",
+          "line_number": 85,
+          "pattern_name": "path_traversal_signal",
+          "severity_hint": "medium"
+        }
+      ],
+      "assessment_results": [
+        {
+          "decision": "validated",
+          "evidence": "java.io.File fileTarget = new java.io.File(fileURI);",
+          "line_end": 85,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00951.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 85,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "validated_findings": [
+        {
+          "decision": "validated",
+          "evidence": "java.io.File fileTarget = new java.io.File(fileURI);",
+          "line_end": 85,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00951.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 85,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "final_cwe_name": null,
+          "hypothesis_type": "path_traversal_signal"
+        }
+      ],
+      "consolidated_findings": [
+        {
+          "line_end": 85,
+          "file_path": "src/main/java/org/owasp/benchmark/testcode/BenchmarkTest00951.java",
+          "rationale": null,
+          "confidence": 0.85,
+          "line_start": 85,
+          "mitigation": null,
+          "final_cwe_id": "CWE-22",
+          "merged_count": 1,
+          "evidence_items": [
+            {
+              "evidence": "java.io.File fileTarget = new java.io.File(fileURI);",
+              "line_end": 85,
+              "line_start": 85
+            }
+          ],
+          "final_cwe_name": null,
+          "hypothesis_types": [
+            "path_traversal_signal"
+          ]
+        }
+      ],
+      "trace": [
+        {
+          "step": "intake",
+          "detail": "Initialized analysis for URL: https://github.com/OWASP-Benchmark/BenchmarkJava.git"
+        },
+        {
+          "step": "clone_repo",
+          "detail": "Repository cloned successfully. repo_id=c8385ac7e30b982f, repo_path=/repos/c8385ac7e30b982f"
+        },
+        {
+          "step": "repo_scout",
+          "detail": "Benchmark fast path used. candidate_files=1"
+        },
+        {
+          "step": "security_scan",
+          "detail": "Security scan completed. raw_matches=1"
+        },
+        {
+          "step": "cwe_validate",
+          "detail": "CWE validation completed. accepted_validated_findings=1"
+        },
+        {
+          "step": "consolidate_findings",
+          "detail": "Finding consolidation completed. consolidated_findings=1"
+        },
+        {
+          "step": "reporter",
+          "detail": "Generated placeholder final report."
+        }
+      ]
+    }
+  ]
+}

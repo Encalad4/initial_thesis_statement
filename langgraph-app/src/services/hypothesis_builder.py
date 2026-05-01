@@ -65,12 +65,12 @@ class HypothesisBuilder:
             "sql_query_concatenation": {
                 "hypothesis_type": "sql_injection_signal",
                 "candidate_cwes": ["CWE-89"],
-                "reasoning": "Possible SQL query construction using concatenation or interpolation."
+                "reasoning": "A database query appears to be dynamically constructed or executed in a way that may allow untrusted input to alter SQL structure."
             },
             "command_execution": {
                 "hypothesis_type": "command_injection_signal",
                 "candidate_cwes": ["CWE-78"],
-                "reasoning": "A command execution API appears and may become dangerous if untrusted input reaches it."
+                "reasoning": "A system command execution sink appears and may become dangerous if command content or arguments are influenced by untrusted input."
             },
             "unsafe_deserialization": {
                 "hypothesis_type": "unsafe_deserialization_signal",
@@ -80,7 +80,7 @@ class HypothesisBuilder:
             "path_traversal_signal": {
                 "hypothesis_type": "path_traversal_signal",
                 "candidate_cwes": ["CWE-22"],
-                "reasoning": "A file access pattern may allow unsafe path manipulation."
+                "reasoning": "A filesystem path sink appears and may use externally influenced path components."
             },
             "dynamic_code_execution": {
                 "hypothesis_type": "dynamic_code_execution_signal",

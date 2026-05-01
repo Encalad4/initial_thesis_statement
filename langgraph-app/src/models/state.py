@@ -54,14 +54,15 @@ class AgentState(TypedDict, total=False):
     repo_summary: Optional[RepoSummary]
     project_stack: Dict[str, Any]
     candidate_files: List[CandidateFile]
+    target_files: List[str]
 
     raw_findings: List[Finding]
     validated_findings: List[Finding]
+    assessment_results: List[Finding]
+    consolidated_findings: List[Finding]
 
     final_report: Optional[Dict[str, Any]]
     errors: List[str]
     trace: List[TraceStep]
 
     debug_max_hypotheses: Optional[int]
-    assessment_results: List[Finding]
-    consolidated_findings: List[Finding]

@@ -112,6 +112,48 @@ class MultiAgentWorkflow:
             state["plan"]["status"] = "failed"
             return state
 
+        target_files = state.get("target_files", [])
+
+        # =========================
+        # BENCHMARK FAST PATH
+        # =========================
+        if target_files:
+            self._log(f"[repo_scout] benchmark fast path target_files={target_files}")
+
+            state["repo_summary"] = {
+                "repo_path": repo_path,
+                "top_level_items": [],
+                "total_files": len(target_files),
+                "extensions": {".java": len(target_files)},
+                "sample_files": target_files
+            }
+
+            state["project_stack"] = {
+                "languages": ["java"],
+                "frameworks": [],
+                "manifests": [],
+                "mode": "benchmark_single_file"
+            }
+
+            state["candidate_files"] = [
+                {
+                    "file_path": tf,
+                    "reason": "benchmark target file",
+                    "priority": 10
+                }
+                for tf in target_files
+            ]
+
+            state.setdefault("trace", []).append({
+                "step": "repo_scout",
+                "detail": f"Benchmark fast path used. candidate_files={len(target_files)}"
+            })
+
+            return state
+
+        # =========================
+        # NORMAL REPO-CENTRIC PATH
+        # =========================
         self._log("[repo_scout] inspecting repo tree")
         repo_result = self.repo_tree_tool.inspect_repository(repo_path)
         if not repo_result.get("success"):
@@ -152,13 +194,15 @@ class MultiAgentWorkflow:
         state["project_stack"] = stack_result["data"]
         state["candidate_files"] = candidate_result["data"]["candidate_files"]
 
+        final_candidate_count = len(state["candidate_files"])
+
         state.setdefault("trace", []).append({
             "step": "repo_scout",
             "detail": (
                 f"Repository inspected successfully. "
                 f"total_files={repo_result['data'].get('total_files', 0)}, "
                 f"languages={stack_result['data'].get('languages', [])}, "
-                f"candidate_files={len(candidate_result['data'].get('candidate_files', []))}"
+                f"candidate_files={final_candidate_count}"
             )
         })
 
@@ -292,10 +336,26 @@ class MultiAgentWorkflow:
             )
 
             self._log("[cwe_validate] reading local code context")
+            context_before = 8
+            context_after = 8
+
+            if hypothesis["hypothesis_type"] == "path_traversal_signal":
+                context_before = 25
+                context_after = 25
+            elif hypothesis["hypothesis_type"] in {"sql_injection_signal", "command_injection_signal"}:
+                context_before = 20
+                context_after = 20
+
             context_result = self.read_file_tool.read_file(
                 f"/repos/{repo_id}/{file_path}",
-                start_line=max(1, line_start - 8),
-                end_line=line_end + 8
+                start_line=max(1, line_start - context_before),
+                end_line=line_end + context_after
+            )
+
+            context_result = self.read_file_tool.read_file(
+                f"/repos/{repo_id}/{file_path}",
+                start_line=max(1, line_start - context_before),
+                end_line=line_end + context_after
             )
 
             if not context_result.get("success"):
@@ -379,6 +439,9 @@ class MultiAgentWorkflow:
             validated = validation_result["data"]
             decision = validated.get("decision")
 
+            ########TESTING FOR MALFORMED JSON ##########
+            self._log(f"[cwe_validate] validator raw_output={validation_result.get('raw_output')}")
+
             self._log(
                 f"[cwe_validate] validator decision={decision} "
                 f"cwe={validated.get('final_cwe_id')} "
@@ -440,7 +503,7 @@ class MultiAgentWorkflow:
 
         return state
     
-    def run(self, github_url: str):
+    def run(self, github_url: str, target_files: list[str] | None = None):
         initial_state: AgentState = {
             "github_url": github_url,
             "repo_id": None,
@@ -453,6 +516,7 @@ class MultiAgentWorkflow:
             "repo_summary": None,
             "project_stack": {},
             "candidate_files": [],
+            "target_files": target_files or [], ##########################
             "raw_findings": [],
             "validated_findings": [],
             "final_report": None,
