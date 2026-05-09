@@ -2,4 +2,4 @@ databases/cve-db/data/*
 databases/mock-db/data/*
 pgadmin-data/*
 ollama-data/*
-datasets/nvd/
+shared/repos
