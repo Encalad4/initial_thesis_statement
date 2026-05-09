@@ -1,44 +1,256 @@
+Tomé tu README actual y le añadí la parte de arquitectura, flujo repo-céntrico, base de conocimiento, evaluación y uso de las imágenes de `evidence/` para que funcione como documento de ejecución **y** de comprensión del sistema. La estructura y los componentes que describo son consistentes con tu borrador y con el documento de tesis. 
+
+
 # LangGraph Thesis Project
 
-## Resumen del proyecto
+## Descripción general
 
-Este proyecto combina:
+Este proyecto implementa una arquitectura repo-céntrica para el análisis estático de repositorios públicos de GitHub con el objetivo de detectar señales de vulnerabilidad, construir hipótesis de debilidad y clasificarlas en términos de **Common Weakness Enumeration (CWE)** mediante recuperación semántica y validación asistida por modelos de lenguaje open source.
 
-- un servicio PostgreSQL con `pgvector` para alojar datos CWE y sus embeddings,
-- un motor de ingestión que carga datos CWE desde el XML `datasets/cwec_v4.19.1.xml`,
-- un contenedor `langgraph-app` que ejecuta la lógica de análisis y validación de hallazgos,
-- un contenedor `sandbox` para clonar repositorios GitHub y servirlos a la aplicación,
-- un contenedor `pgadmin` para administrar la base de datos.
+La solución está compuesta por varios servicios desacoplados:
 
-El objetivo principal es analizar código, construir hipótesis de vulnerabilidad y validar contra CWE usando embeddings semánticos.
+- un contenedor **sandbox** para clonar repositorios públicos,
+- una aplicación principal **langgraph-app** que ejecuta el flujo de análisis,
+- una base de datos **PostgreSQL + pgvector** que almacena conocimiento CWE y resultados de benchmark,
+- un entorno **Ollama** para embeddings y validación con LLM,
+- y un contenedor **pgAdmin** para inspección manual de la base de datos.
+
+El objetivo del sistema no es ejecutar código del repositorio objetivo, sino **tratarlo únicamente como texto fuente para análisis estático**.
 
 ---
 
-## Estructura principal
+## Qué hace el sistema
 
-- `docker-compose.yml`: define los servicios `cve-db-tesis-3`, `sandbox-tesis-3`, `pgadmin-tesis-3` y `langgraph-app-tesis-3`.
-- `databases/cve-db/init/01_cwe_schema.sql`: esquema inicial de la base de datos con tablas CWE y embeddings.
-- `datasets/cwec_v4.19.1.xml`: dataset CWE original usado para cargar la base de datos.
-- `langgraph-app/`: aplicación principal y scripts de ingestión/evaluación.
-- `langgraph-app/src/ingestion/`: scripts para cargar CWE en la base de datos y generar embeddings.
-- `langgraph-app/src/graph/workflow.py`: flujo de análisis de repositorios y evaluación de archivos.
-- `langgraph-app/src/evaluation/run_benchmark_subset.py`: script para ejecutar subset de benchmark OWASP.
+Dado un repositorio de GitHub o un archivo específico de benchmark, el sistema:
+
+1. clona el repositorio dentro del contenedor `sandbox`,
+2. inspecciona el proyecto y selecciona archivos candidatos,
+3. detecta patrones sospechosos en el código,
+4. transforma esas señales en hipótesis de vulnerabilidad,
+5. recupera CWEs candidatos mediante búsqueda semántica sobre embeddings,
+6. aplica un pre-filtro barato para eliminar falsos positivos obvios,
+7. valida la hipótesis con un agente basado en LLM,
+8. consolida los hallazgos aceptados,
+9. y devuelve una salida estructurada persistible para evaluación experimental.
+
+---
+
+## Arquitectura visual
+
+### Arquitectura general
+
+![Arquitectura general del sistema](evidence/Flujo%20de%20trabajo.png)
+
+Esta figura resume la idea principal del sistema: una entrada de repositorio, un entorno aislado para almacenamiento del código, una aplicación LangGraph que orquesta el análisis y una base de conocimiento CWE que sirve como capa de recuperación y apoyo a la clasificación.
+
+### Infraestructura dockerizada
+
+![Infraestructura dockerizada](evidence/Infraestructura%20de%20servicios%20dockerizados.png)
+
+Esta figura muestra la separación entre contenedores y responsabilidades. El contenedor `sandbox` maneja el clonado, `langgraph-app` ejecuta el flujo de trabajo, la base PostgreSQL almacena conocimiento y resultados, y Ollama realiza embeddings y validación.
+
+### Flujo repo-céntrico
+
+![Flujo repo-céntrico](evidence/Flujo%20repo-centrico.png)
+
+Esta figura ilustra la lógica principal del pipeline: exploración del repositorio, selección de archivos, detección de patrones, construcción de hipótesis, recuperación de CWE, validación y consolidación de hallazgos.
+
+### Grafo de workflow
+
+![Workflow graph](evidence/workflow_graph.png)
+
+Esta imagen representa la estructura lógica del flujo implementado en LangGraph.
+
+### Base de conocimiento CWE
+
+![Base de conocimiento CWE](evidence/bddUML.png)
+
+Este diagrama resume la estructura lógica de la base de datos CWE, incluyendo tablas principales, relaciones, mitigaciones, métodos de detección y embeddings.
+
+### Recuperación semántica
+
+![Distancia entre vectores](evidence/distanciaVectores.png)
+
+Esta figura ayuda a interpretar la idea de recuperación semántica: las hipótesis construidas desde el código se convierten en consultas semánticas y se comparan contra vectores de CWE para recuperar candidatos cercanos conceptualmente.
+
+### Vista general de contenedores
+
+![Contenedores del proyecto](evidence/CONTENEDORES%20TESIS.png)
+
+---
+
+## Cómo funciona internamente
+
+## 1. Entrada del sistema
+
+La entrada principal es una URL de GitHub, por ejemplo:
+
+```bash
+https://github.com/usuario/repositorio.git
+````
+
+Opcionalmente, en modo benchmark, la ejecución puede restringirse a uno o más archivos concretos mediante `target_files`.
+
+---
+
+## 2. Clonado y aislamiento
+
+El clonado del repositorio se realiza en el contenedor `sandbox`.
+Esto cumple dos propósitos:
+
+* aislar el contenido externo del resto del sistema,
+* y evitar que el repositorio objetivo sea ejecutado.
+
+El repositorio clonado se guarda en un volumen compartido y luego es tratado únicamente como entrada textual.
+
+---
+
+## 3. Exploración repo-céntrica
+
+Una vez clonado, el workflow analiza la estructura del proyecto:
+
+* inspecciona el árbol del repositorio,
+* detecta el stack predominante,
+* y selecciona archivos candidatos para análisis.
+
+En evaluación de benchmark, si se pasan `target_files`, el sistema activa un **benchmark fast path** y evita la exploración completa del repositorio, trabajando solo sobre los archivos indicados.
+
+---
+
+## 4. Detección de patrones sospechosos
+
+La herramienta `SuspiciousPatternTool` recorre los archivos candidatos y aplica reglas basadas en expresiones regulares y heurísticas para detectar señales de interés, por ejemplo:
+
+* construcción dinámica de consultas SQL,
+* sinks de ejecución de comandos,
+* acceso a rutas/archivos,
+* credenciales embebidas,
+* almacenamiento inseguro del lado cliente,
+* sinks DOM XSS,
+* deserialización insegura.
+
+El resultado de esta etapa son **raw findings**, que todavía no son hallazgos finales.
+
+---
+
+## 5. Construcción de hipótesis
+
+La clase `HypothesisBuilder` transforma cada señal cruda en una hipótesis estructurada con:
+
+* `hypothesis_type`,
+* `candidate_cwes`,
+* ubicación del archivo,
+* línea de evidencia,
+* severidad tentativa,
+* y una explicación corta del motivo de sospecha.
+
+Ejemplo conceptual:
+
+* señal: `sql_query_concatenation`
+* hipótesis resultante: `sql_injection_signal`
+* candidatos iniciales: `CWE-89`
+
+---
+
+## 6. Recuperación semántica sobre CWE
+
+Después de construir una hipótesis, el sistema genera una consulta semántica usando la evidencia encontrada y la utiliza para buscar CWE candidatos en la base PostgreSQL con `pgvector`.
+
+La recuperación semántica no decide la clasificación final; su propósito es **reducir el espacio de búsqueda** y entregar al agente validador un conjunto pequeño de CWEs plausibles.
+
+---
+
+## 7. Pre-filtro de hipótesis
+
+Antes de llamar al agente validador, el sistema aplica un `HypothesisPreFilter`.
+
+Esta capa sirve para rechazar casos obviamente seguros o irrelevantes sin costo de LLM, por ejemplo:
+
+* PreparedStatements que usan placeholders y binding seguro,
+* comandos completamente literales sin evidencia de influencia externa,
+* contextos de path handling con señales visibles de validación o normalización,
+* casos cliente-servidor donde no existe evidencia de relevancia de seguridad.
+
+---
+
+## 8. Validación con LLM
+
+La clase `CWEValidatorAgent` utiliza un modelo open source ejecutado localmente con Ollama para validar una sola hipótesis a la vez.
+
+Entradas del validador:
+
+* contexto del proyecto,
+* hipótesis sospechosa,
+* fragmento local de código,
+* candidatos CWE recuperados.
+
+Salida del validador:
+
+* `validated`,
+* `rejected`,
+* o `needs_review`,
+* junto con el `final_cwe_id`, confianza y una justificación breve.
+
+Esta es la principal etapa de razonamiento semántico del sistema.
+
+---
+
+## 9. Consolidación de hallazgos
+
+Los hallazgos aceptados por el validador se agrupan y consolidan en una salida final estructurada, lista para:
+
+* inspección manual,
+* persistencia en base de datos,
+* evaluación experimental,
+* cálculo de métricas,
+* y análisis de errores.
+
+---
+
+## 10. Evaluación experimental
+
+Para benchmark, el proyecto usa **OWASP Benchmark Java** y scripts de evaluación que:
+
+* seleccionan subconjuntos de casos,
+* ejecutan el workflow por archivo,
+* almacenan resultados persistentes,
+* permiten reanudación por `run_label`,
+* calculan métricas,
+* y exportan falsos positivos / falsos negativos.
+
+---
+
+## Estructura principal del repositorio
+
+* `docker-compose.yml`: define todos los servicios del sistema.
+* `databases/cve-db/init/`: scripts SQL de inicialización de la base.
+* `datasets/cwec_v4.19.1.xml`: dataset CWE de MITRE utilizado para la carga.
+* `evidence/`: imágenes y diagramas del sistema.
+* `langgraph-app/`: aplicación principal.
+* `langgraph-app/src/graph/workflow.py`: flujo principal de análisis.
+* `langgraph-app/src/tools/`: herramientas determinísticas.
+* `langgraph-app/src/agents/`: agentes basados en LLM.
+* `langgraph-app/src/services/`: servicios auxiliares como hipótesis y pre-filtros.
+* `langgraph-app/src/ingestion/`: scripts para cargar CWE y embeddings.
+* `langgraph-app/src/evaluation/`: scripts de benchmark, métricas y análisis de errores.
 
 ---
 
 ## Requisitos previos
 
 1. Docker y Docker Compose instalados.
-2. Python 3.11 disponible en el host si ejecutar los scripts de ingestión desde el host.
-3. Conexión a internet para clonar repositorios GitHub y descargar dependencias.
+2. Python 3.11 disponible en el host si deseas correr scripts fuera de contenedores.
+3. Conexión a internet para:
+
+   * clonar repositorios GitHub,
+   * descargar dependencias,
+   * y descargar modelos en Ollama.
 
 ---
 
 ## Instalación de dependencias
 
-### 1. Requisitos del workspace raíz
-
-Este repositorio contiene un `requirements.txt` en la raíz. Instálalo si deseas trabajar con los scripts desde el host:
+### Dependencias desde la raíz
 
 ```bash
 python -m venv .venv
@@ -46,11 +258,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-### 2. Requisitos de `langgraph-app`
-
-El contenedor `langgraph-app` instala sus propios paquetes desde `langgraph-app/requirements.txt` durante la construcción del contenedor.
-
-Para instalar localmente (si planeas ejecutar código de `langgraph-app` fuera de Docker):
+### Dependencias de `langgraph-app`
 
 ```bash
 python -m venv .venv
@@ -58,24 +266,26 @@ python -m venv .venv
 pip install -r langgraph-app/requirements.txt
 ```
 
+> Nota: el contenedor `langgraph-app` instala automáticamente sus dependencias al construirse.
+
 ---
 
 ## Levantar el proyecto con Docker Compose
 
-Desde la raíz del proyecto ejecuta:
+Desde la raíz del proyecto:
 
 ```bash
 docker compose up -d --build
 ```
 
-Esto crea y levanta los servicios:
+Esto levanta:
 
-- `cve-db-tesis-3`: PostgreSQL con `pgvector`.
-- `sandbox-tesis-3`: servicio de clonación de repositorios.
-- `pgadmin-tesis-3`: interfaz de administración de PostgreSQL.
-- `langgraph-app-tesis-3`: aplicación principal con Ollama y el código de LangGraph.
+* `cve-db-tesis-3`: PostgreSQL con `pgvector`,
+* `sandbox-tesis-3`: clonado controlado de repositorios,
+* `pgadmin-tesis-3`: administración visual de PostgreSQL,
+* `langgraph-app-tesis-3`: aplicación principal con Ollama y LangGraph.
 
-Verifica el estado con:
+Verificar estado:
 
 ```bash
 docker compose ps
@@ -83,244 +293,356 @@ docker compose ps
 
 ---
 
-## Elección e instalación de modelos Open Source
+## Modelos open source usados
 
-Este proyecto utiliza modelos de lenguaje Open Source alojados en Ollama para dos propósitos principales:
+El proyecto utiliza Ollama para dos tareas:
 
-- **Modelo de embeddings**: `mxbai-embed-large` para generar representaciones vectoriales de los CWE y consultas de búsqueda semántica.
-- **Modelo de validación**: `qwen2.5:7b` para la lógica de validación de hipótesis de vulnerabilidades contra CWE.
+* **Embeddings**: `mxbai-embed-large`
+* **Validación LLM**: `qwen2.5:7b`
 
-### Instalación manual de modelos
-
-Los modelos no se instalan automáticamente durante la construcción del contenedor. Debes instalarlos manualmente dentro del contenedor `langgraph-app-tesis-3` una vez que esté corriendo:
-
-1. Accede al contenedor:
+### Instalar modelos dentro del contenedor
 
 ```bash
 docker exec -it langgraph-app-tesis-3 bash
-```
-
-2. Instala los modelos requeridos:
-
-```bash
 ollama pull qwen2.5:7b
 ollama pull mxbai-embed-large
-```
-
-3. Verifica que estén instalados:
-
-```bash
 ollama list
 ```
 
-### Cambiar modelos para experimentación
+### Cambiar modelos
 
-Si deseas probar con otros modelos Open Source disponibles en Ollama:
+Si se desea experimentar con otros modelos:
 
-1. Instala el nuevo modelo dentro del contenedor:
+1. instalar el modelo con `ollama pull`,
+2. actualizar la referencia en:
 
-```bash
-ollama pull nombre_del_nuevo_modelo
-```
-
-2. Actualiza las constantes en el código:
-
-   - Para el modelo de embeddings: modifica `MODEL = "mxbai-embed-large"` en `langgraph-app/src/ingestion/load_cwe_embeddings.py`.
-   - Para el modelo de validación: modifica la referencia correspondiente en `langgraph-app/src/agents/cwe_validator.py` (busca la configuración del modelo de lenguaje).
-
-3. Reinicia el contenedor o vuelve a ejecutar los scripts afectados.
-
-> **Nota**: Asegúrate de que el nuevo modelo sea compatible con las interfaces de Ollama utilizadas (embeddings API para embeddings, chat API para validación).
+   * `langgraph-app/src/ingestion/load_cwe_embeddings.py`
+   * `langgraph-app/src/agents/cwe_validator.py`
+3. reiniciar el contenedor o volver a ejecutar el flujo.
 
 ---
 
-## Cargar CWE a la base de datos
+## Cargar el conocimiento CWE
 
-### 1. Qué hace `load_cwe_core.py`
-
-`langgraph-app/src/ingestion/load_cwe_core.py`:
-
-- parsea `datasets/cwec_v4.19.1.xml`,
-- extrae CWE principales,
-- extrae relaciones CWE,
-- extrae mitigaciones CWE,
-- extrae métodos de detección CWE,
-- escribe esos datos en las tablas PostgreSQL:
-  - `cwe`
-  - `cwe_relationships`
-  - `cwe_mitigations`
-  - `cwe_detection_methods`
-
-### 2. Ejecutar la carga CWE
-
-Los scripts de ingestión están configurados para conectar a la base de datos en `localhost:5433`, como esta en el mapeo de puertos del contenedor PostgreSQL.
-
-Desde el host, con el entorno Python activo:
+## 1. Cargar el núcleo CWE
 
 ```bash
 python langgraph-app/src/ingestion/load_cwe_core.py
 ```
 
-Esto llenará la base de datos con los datos CWE del XML.
+Este script:
 
-> Nota: si deseas ejecutar el script dentro del contenedor `langgraph-app-tesis-3`, primero deberás ajustar `DB_CONFIG` en `load_cwe_core.py` para usar host `cve-db-tesis-3` y puerto `5432`, porque dentro del contenedor `localhost:5433` no apunta al contenedor PostgreSQL.
+* parsea `datasets/cwec_v4.19.1.xml`,
+* carga debilidades principales,
+* relaciones,
+* mitigaciones,
+* y métodos de detección.
 
----
+Tablas principales pobladas:
 
-## Generar embeddings CWE
+* `cwe`
+* `cwe_relationships`
+* `cwe_mitigations`
+* `cwe_detection_methods`
 
-### 1. Qué hace `load_cwe_embeddings.py`
-
-`langgraph-app/src/ingestion/load_cwe_embeddings.py`:
-
-- lee la tabla `cwe`,
-- construye un texto combinado por CWE que incluye:
-  - nombre,
-  - descripción,
-  - descripción extendida,
-  - mitigaciones,
-  - detecciones,
-- llama a Ollama para generar embeddings con el modelo `mxbai-embed-large`,
-- guarda los embeddings en la tabla `cwe_embeddings`.
-
-### 2. Ejecutar la generación de embeddings
-
-Desde el host:
+## 2. Generar embeddings
 
 ```bash
 python langgraph-app/src/ingestion/load_cwe_embeddings.py
 ```
 
-### 3. Completar embeddings faltantes
+Este script:
 
-Si hay CWEs sin embedding, usa:
+* construye texto enriquecido por CWE,
+* genera embeddings con `mxbai-embed-large`,
+* y los inserta en `cwe_embeddings`.
+
+## 3. Completar embeddings faltantes
 
 ```bash
 python langgraph-app/src/ingestion/load_missing_cwe_embeddings_fallback.py
 ```
 
-Este script busca entradas en `cwe` que no tengan vector en `cwe_embeddings` y trata de calcular embeddings para ellas con un texto más corto.
+---
+
+## Otros scripts útiles de ingestión
+
+* `preview_cwe_core.py`: vista preliminar de registros parseados desde el XML.
+* `preview_cwe_embedding_text.py`: muestra el texto construido para embeddings.
+* `test_cwe_db_connection.py`: valida conectividad y contenido de la base.
+* `test_cwe_semantic_search.py`: prueba la búsqueda vectorial sobre CWE.
 
 ---
 
-## Otros scripts importantes en `langgraph-app/src/ingestion`
+## Ejecutar el workflow sobre un repositorio
 
-- `preview_cwe_core.py`: carga el XML CWE y muestra un ejemplo de registros, útil para verificar que el XML se parsea correctamente.
-- `preview_cwe_embedding_text.py`: muestra cómo se formatea el texto que se usa para generar embeddings.
-- `test_cwe_db_connection.py`: verifica que se puede conectar a la base de datos y que hay datos en `cwe`.
-- `test_cwe_semantic_search.py`: ejecuta consultas de prueba sobre los embeddings para verificar búsqueda vectorial.
+El contenedor `langgraph-app-tesis-3` se mantiene activo, pero el análisis no corre automáticamente como servicio web.
+La forma correcta de ejecutar análisis es invocando directamente `MultiAgentWorkflow`.
 
-
-
----
-
-## Correr `langgraph-app` sobre un repositorio
-
-El contenedor `langgraph-app-tesis-3` arranca Ollama y luego ejecuta `python -u -m src.main`, pero ese archivo solo mantiene el proceso vivo y no inicia un servidor de análisis automático.
-
-La lógica de análisis está en `src/graph/workflow.py` dentro de la clase `MultiAgentWorkflow`.
-
-### Ejecutar un análisis de repositorio
-
-Dentro del contenedor `langgraph-app-tesis-3` puedes ejecutar el flujo con un comando Python:
+### Ejecución normal
 
 ```bash
-docker exec -it langgraph-app-tesis-3 python -c "import json; from src.graph.workflow import MultiAgentWorkflow; result = MultiAgentWorkflow().run('https://github.com/usuario/repositorio.git'); print(json.dumps(result, indent=2))"
+docker exec -it langgraph-app-tesis-3 python -c "import json; from src.graph.workflow import MultiAgentWorkflow; result = MultiAgentWorkflow().run('https://github.com/usuario/repositorio.git'); print(json.dumps(result, indent=2, default=str))"
 ```
 
-Este comando realiza:
+### Qué hace esta ejecución
 
-- clonación del repositorio usando el servicio `sandbox-tesis-3`,
-- análisis del árbol de repositorio y detección de pila,
-- selección de archivos candidatos,
-- escaneo por patrones inseguros,
-- generación de hipótesis,
-- validación semántica contra CWE,
-- consolidación de hallazgos.
-
-### Ejecutar solo archivos específicos en modo benchmark
-
-Para ejecutar una ruta concreta de benchmark, usa el parámetro `target_files` del workflow.
-
-Ejemplo:
-
-```bash
-docker exec -it langgraph-app-tesis-3 python -c "import json; from src.graph.workflow import MultiAgentWorkflow; result = MultiAgentWorkflow().run('https://github.com/usuario/repositorio.git', target_files=['src/main/java/org/owasp/benchmark/testcode/Example.java']); print(json.dumps(result, indent=2))"
-```
-
-En ese caso, el flujo usa el `BENCHMARK FAST PATH` y evita la inspección normal completa del repositorio. Solo analiza los archivos listados en `target_files`.
+* clona el repositorio,
+* explora su estructura,
+* selecciona archivos candidatos,
+* detecta patrones sospechosos,
+* construye hipótesis,
+* recupera CWE candidatos,
+* valida con LLM,
+* y consolida hallazgos.
 
 ---
 
-## Ejecutar benchmark de OWASP con casos específicos
+## Ejecutar archivos específicos con `target_files`
 
-El script `langgraph-app/src/evaluation/run_benchmark_subset.py` es la forma preparada para correr subsets de benchmark OWASP.
+Esto activa el modo controlado tipo benchmark:
+
+```bash
+docker exec -it langgraph-app-tesis-3 python -c "import json; from src.graph.workflow import MultiAgentWorkflow; result = MultiAgentWorkflow().run('https://github.com/usuario/repositorio.git', target_files=['src/main/java/org/owasp/benchmark/testcode/Example.java']); print(json.dumps(result, indent=2, default=str))"
+```
+
+Con `target_files`, el flujo evita la exploración completa y analiza únicamente los archivos indicados.
+
+---
+
+## Ejecutar benchmark con OWASP Benchmark Java
+
+El script preparado para benchmark es:
+
+```text
+langgraph-app/src/evaluation/run_benchmark_subset.py
+```
 
 ### Uso básico
-
-Dentro del contenedor:
 
 ```bash
 docker exec -it langgraph-app-tesis-3 python -m src.evaluation.run_benchmark_subset --run-label my_benchmark_run
 ```
 
-Esto usa por defecto:
+### Parámetros importantes
 
-- `DEFAULT_BENCHMARK_JSON = /app/src/evaluation/owasp_benchmark_java_v1_2.json`
-- `DEFAULT_REPO_URL = https://github.com/OWASP-Benchmark/BenchmarkJava.git`
+* `--run-label`: etiqueta obligatoria de la corrida.
+* `--benchmark-json`: JSON del benchmark a usar.
+* `--repo-url`: URL del repositorio de benchmark.
+* `--category`: filtra por categoría.
+* `--real-vulnerability`: `true`, `false` o `none`.
+* `--limit`: número máximo de casos.
+* `--force-rerun`: reejecuta aunque ya existan resultados.
+* `--cwe-id`: filtra por CWE específico.
 
-### Argumentos útiles
-
-- `--run-label`: etiqueta obligatoria para esta ejecución.
-- `--benchmark-json`: ruta al JSON de benchmark si deseas otro conjunto de casos.
-- `--repo-url`: URL del repositorio GitHub a analizar.
-- `--category`: categoría del benchmark, por ejemplo `pathtraver`.
-- `--real-vulnerability`: `true`, `false` o `none`.
-- `--limit`: número de casos a ejecutar.
-- `--force-rerun`: fuerza re-ejecución aun cuando los resultados ya existan.
-- `--cwe-id`: filtrar casos por CWE específico.
-
-### Ejemplo concreto
+### Ejemplo
 
 ```bash
 docker exec -it langgraph-app-tesis-3 python -m src.evaluation.run_benchmark_subset --run-label benchmark_pathtraver --category pathtraver --real-vulnerability true --limit 20
 ```
 
-Este script:
+---
 
-- carga los casos desde el JSON de benchmark,
-- filtra los casos según los parámetros,
-- crea tablas de resultados en PostgreSQL si no existen,
-- ejecuta el flujo `MultiAgentWorkflow` para cada caso,
-- guarda los resultados en `benchmark_case_results`.
+## Calcular métricas
+
+El proyecto incluye un script para calcular métricas a partir de las corridas persistidas:
+
+```bash
+python -m src.evaluation.compute_metrics --run-labels nombre_de_corrida
+```
+
+Ejemplo:
+
+```bash
+python -m src.evaluation.compute_metrics --run-labels cwe22_all_v2
+```
+
+El script puede reportar:
+
+* TP
+* FP
+* FN
+* TN
+* precision
+* recall
+* F1
+* accuracy
+* specificity
+
+y, en algunas configuraciones, también métricas family-aware.
 
 ---
 
-## Puntos importantes y recomendaciones
+## Exportar falsos positivos y falsos negativos
 
-- El DB schema inicial se crea automáticamente al iniciar `cve-db-tesis-3`, gracias a los scripts en `databases/cve-db/init/`.
-- `langgraph-app` usa Ollama instalado dentro del contenedor y `OLLAMA_URL` en `http://localhost:11434/api/embeddings`.
-- Para ejecutar análisis de benchmark desde el contenedor, usa `docker exec` con `python -m src.evaluation.run_benchmark_subset`.
-- Los scripts de ingestión en `langgraph-app/src/ingestion` están escritos para conectarse al DB en `localhost:5433`. Si deseas ejecutarlos dentro del contenedor, cambia la configuración a `host='cve-db-tesis-3'` y `port=5432`.
+Para análisis de errores:
+
+```bash
+python -m src.evaluation.export_misclassified_cases --run-labels cwe22_all_v2 --error-type fp --limit 10 --include-raw-result
+```
+
+o
+
+```bash
+python -m src.evaluation.export_misclassified_cases --run-labels cwe22_all_v2 --error-type fn --limit 10 --include-raw-result
+```
+
+Esto permite inspeccionar:
+
+* evidencia detectada,
+* hipótesis construidas,
+* salida del validador,
+* hallazgos consolidados,
+* y trazas del workflow.
+
+---
+
+## Persistencia de resultados
+
+Las corridas de benchmark se almacenan en PostgreSQL.
+Las tablas de evaluación incluyen al menos:
+
+* `benchmark_runs`
+* `benchmark_case_results`
+
+Esto permite:
+
+* repetir experimentos con `run_label`,
+* evitar reruns innecesarios,
+* calcular métricas posteriormente,
+* exportar errores,
+* y comparar iteraciones del sistema.
+
+---
+
+## Flujo resumido del sistema
+
+### Modo repositorio completo
+
+```text
+URL GitHub
+  -> sandbox clone
+  -> repo_scout
+  -> candidate file selection
+  -> security_scan
+  -> hypothesis_builder
+  -> semantic CWE retrieval
+  -> hypothesis_pre_filter
+  -> cwe_validator_agent
+  -> consolidate_findings
+  -> reporter
+```
+
+### Modo benchmark controlado
+
+```text
+Benchmark case
+  -> target_files
+  -> benchmark fast path
+  -> security_scan
+  -> hypothesis_builder
+  -> semantic retrieval
+  -> pre-filter
+  -> validator
+  -> result persistence
+  -> metrics
+```
+
+---
+
+## Limitaciones actuales
+
+Este proyecto debe entenderse como una arquitectura experimental reproducible, no como un detector listo para despliegue operativo. Sus principales limitaciones actuales son:
+
+* dependencia de patrones heurísticos para generar señales,
+* sensibilidad a contexto local del código,
+* necesidad de ajustar prompts y pre-filtros por familia CWE,
+* costo computacional relativamente alto en validación con LLM,
+* y baja capacidad de rechazo en algunas familias de benchmark.
+
+---
+
+## Recomendaciones de uso
+
+* usar `target_files` para depuración rápida,
+* usar `run_label` consistentes para benchmark,
+* no ejecutar el repositorio objetivo bajo ningún concepto,
+* revisar resultados con `compute_metrics` y `export_misclassified_cases`,
+* y probar cambios primero con smoke tests antes de lanzar corridas completas.
 
 ---
 
 ## Resumen rápido de pasos
 
-1. Instalar dependencias: `pip install -r requirements.txt` o `pip install -r langgraph-app/requirements.txt`.
-2. Levantar containers: `docker compose up -d --build`.
-3. Cargar CWE a la DB: `python langgraph-app/src/ingestion/load_cwe_core.py`.
-4. Generar embeddings: `python langgraph-app/src/ingestion/load_cwe_embeddings.py`.
-5. Validar y completar embeddings faltantes: `python langgraph-app/src/ingestion/load_missing_cwe_embeddings_fallback.py`.
-6. Ejecutar un repo con el workflow: `docker exec -it langgraph-app-tesis-3 python -c "...MultiAgentWorkflow().run(...)..."`.
-7. Ejecutar benchmark de archivos específicos: `docker exec -it langgraph-app-tesis-3 python -m src.evaluation.run_benchmark_subset --run-label ...`.
+1. Levantar contenedores:
+
+```bash
+docker compose up -d --build
+```
+
+2. Instalar modelos en Ollama:
+
+```bash
+docker exec -it langgraph-app-tesis-3 bash
+ollama pull qwen2.5:7b
+ollama pull mxbai-embed-large
+```
+
+3. Cargar CWE:
+
+```bash
+python langgraph-app/src/ingestion/load_cwe_core.py
+```
+
+4. Generar embeddings:
+
+```bash
+python langgraph-app/src/ingestion/load_cwe_embeddings.py
+```
+
+5. Ejecutar un repositorio:
+
+```bash
+docker exec -it langgraph-app-tesis-3 python -c "import json; from src.graph.workflow import MultiAgentWorkflow; result = MultiAgentWorkflow().run('https://github.com/usuario/repositorio.git'); print(json.dumps(result, indent=2, default=str))"
+```
+
+6. Ejecutar benchmark:
+
+```bash
+docker exec -it langgraph-app-tesis-3 python -m src.evaluation.run_benchmark_subset --run-label my_run
+```
+
+7. Calcular métricas:
+
+```bash
+python -m src.evaluation.compute_metrics --run-labels my_run
+```
 
 ---
 
-## Contacto interno
+## Archivos clave
 
-- `langgraph-app/src/graph/workflow.py`: flujo de análisis.
-- `langgraph-app/src/ingestion/load_cwe_core.py`: carga core CWE en la DB.
-- `langgraph-app/src/ingestion/load_cwe_embeddings.py`: genera embeddings.
-- `langgraph-app/src/evaluation/run_benchmark_subset.py`: ejecución de benchmark.
-- `docker-compose.yml`: define la topología de servicios.
+* `docker-compose.yml`
+* `langgraph-app/src/graph/workflow.py`
+* `langgraph-app/src/tools/suspicious_pattern_tool.py`
+* `langgraph-app/src/services/hypothesis_builder.py`
+* `langgraph-app/src/services/hypothesis_pre_filter.py`
+* `langgraph-app/src/agents/cwe_validator.py`
+* `langgraph-app/src/ingestion/load_cwe_core.py`
+* `langgraph-app/src/ingestion/load_cwe_embeddings.py`
+* `langgraph-app/src/evaluation/run_benchmark_subset.py`
+* `langgraph-app/src/evaluation/compute_metrics.py`
+* `langgraph-app/src/evaluation/export_misclassified_cases.py`
+
+---
+
+## Notas finales
+
+* Los scripts de ingestión corren por defecto contra la configuración actual del proyecto.
+* Si deseas mover la ejecución completamente dentro de contenedores, revisa las variables de conexión a base de datos.
+* Si cambias modelos o prompts, se recomienda volver a ejecutar smoke tests antes de lanzar corridas completas.
+* La carpeta `evidence/` contiene diagramas que resumen arquitectura, workflow, infraestructura y base de conocimiento; son útiles para entender el diseño general del sistema y también como respaldo documental del proyecto.
+
+
+
+
